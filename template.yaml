@@ -17,12 +17,20 @@ Resources:
       CodeUri: process-message/
       Handler: app.lambdaHandler
       Runtime: nodejs12.x
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref MessagesBucket
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref MessagesBucket
       Events:
         ProcessMessage:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /process
             Method: post
+  MessagesBucket:
+    Type: 'AWS::S3::Bucket'
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
