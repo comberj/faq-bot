@@ -1,0 +1,41 @@
+{
+	"body": {
+		"token": "EU5iBrgX4LfWbpwF4CB8HNyM",
+		"team_id": "T02FEFNP5",
+		"api_app_id": "ARQAYAR3K",
+		"event": {
+			"client_msg_id": "5e94a133-f7d2-40f2-b2e8-2b824014bee2",
+			"type": "message",
+			"text": "Jon",
+			"user": "UF6B2CEJC",
+			"ts": "1577129471.001200",
+			"team": "T02FEFNP5",
+			"blocks": [
+			{
+				"type": "rich_text",
+				"block_id": "d8ZUb",
+				"elements": [
+				{
+					"type": "rich_text_section",
+					"elements": [
+					{
+						"type": "text",
+						"text": "Jon"
+					}
+					]
+				}
+				]
+			}
+			],
+			"channel": "CS0K0TR1T",
+			"event_ts": "1577129471.001200",
+			"channel_type": "channel"
+		},
+		"type": "event_callback",
+		"event_id": "EvS0K1LSAZ",
+		"event_time": 1577129471,
+		"authed_users": [
+			"US056P62Y"
+		]
+	}
+}
