@@ -1,4 +1,5 @@
 const aws = require('aws-sdk');
+const comprehend = new aws.Comprehend();
 const s3 = new aws.S3({ apiVersion: '2006-03-01' });
 
 let response;
@@ -21,6 +22,7 @@ exports.lambdaHandler = async (event, context) => {
             'isBase64Encoded': false,
             'headers': {}
         }
+        console.log('event.body', event.body);
         const body = JSON.parse(event.body);
         if(body.type === 'url_verification') {
             console.log('url_verification');
@@ -31,7 +33,52 @@ exports.lambdaHandler = async (event, context) => {
         } else if (body.type === 'event_callback'){
             console.log('event_callback');
             
-            // TODO: Process keywords in message and store alongside body
+            var params = {
+              LanguageCode: 'en',
+              Text: body.event.text
+            };
+            const entities = await comprehend.detectEntities(params).promise();
+            const keyPhrases = await comprehend.detectKeyPhrases(params).promise();
+            
+            let keywords = entities.Entities.concat(keyPhrases.KeyPhrases).map(function(k) { return k.Text });
+            
+            console.log('keywords: ', keywords);
+            
+            /*
+                SELECT metaData.keywords, event.channel, event.event_ts
+                FROM bucket
+                WHERE 'the heck' IN (entities)
+                    OR keyword2 IN (entities)
+            */
+            
+            // Store metaData in body
+            body.metaData = {
+              type: typeof body.event.thread_ts !== 'undefined' ? 'answer' : 'question',
+              keywords: keywords
+            };
+            
+            if (body.metaData.type === 'question') {
+                // Search for like-questions
+                const expression = 'SELECT metaData.keywords, event.channel, event.event_ts FROM S3Object WHERE 1 = 1';
+                const params = {
+                    Bucket: process.env.BUCKET_NAME,
+                    Key: body.event.channel,
+                    ExpressionType: 'SQL',
+                    Expression: expression,
+                    InputSerialization: {
+                        JSON: {
+                            Type: 'DOCUMENT'
+                        }
+                    },
+                    OutputSerialization: {
+                        JSON: {}
+                    }
+                };
+                
+                let queryResults = await s3.selectObjectContent(params).promise();
+                console.log('queryResults:', queryResults);
+            }
+            
             // TODO: To generate link to previous message, take the following: https://winedirectteam.slack.com/archives/${body.event.channel}/p${body.event.event_ts.replace('.','')}
             var params = {
                 Body: JSON.stringify(body), 

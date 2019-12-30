@@ -20,6 +20,7 @@ Resources:
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref MessagesBucket
+        - ComprehendBasicAccessPolicy: {}
       Environment:
         Variables:
           BUCKET_NAME: !Ref MessagesBucket
