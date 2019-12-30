@@ -8,8 +8,31 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
+    Environment:
+      Variables:
+        REGION: !Ref region
+        DB_HOST: !Ref db_host
+        DB_PORT: !Ref db_port
+        DB_NAME: !Ref db_name
+        DB_USER: !Ref db_user
+        DB_PASSWORD: !Ref db_password
+        BUCKET_NAME: !Ref MessagesBucket
     Timeout: 3
-
+    
+Parameters:
+  region:
+    Type: String
+  db_host:
+    Type: String
+  db_port:
+    Type: Number
+  db_name:
+    Type: String
+  db_user:
+    Type: String
+  db_password:
+    Type: String
+  
 Resources:
   ProcessMessage:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -21,9 +44,6 @@ Resources:
         - S3CrudPolicy:
             BucketName: !Ref MessagesBucket
         - ComprehendBasicAccessPolicy: {}
-      Environment:
-        Variables:
-          BUCKET_NAME: !Ref MessagesBucket
       Events:
         ProcessMessage:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

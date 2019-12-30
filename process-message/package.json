@@ -6,5 +6,7 @@
 	"repository": "https://github.com/comberj/faq-bot/tree/master/process-message",
 	"author": "SAM CLI",
 	"license": "MIT",
-	"dependencies": {}
+	"dependencies": {
+		"serverless-mysql": "~1.5.2"
+	}
 }
