@@ -6,7 +6,6 @@
 	"repository": "https://github.com/comberj/faq-bot",
 	"author": "SAM CLI",
 	"license": "MIT",
-	"dependencies": {},
 	"scripts": {
 		"api": "sam local start-api --region us-west-2 --parameter-overrides \"$(jq -r -j 'to_entries[] | \"ParameterKey=\\(.key),ParameterValue=\\(.value) \"' config.json)\"",
 		"package": "sam package --template-file ./template.yaml --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami --output-template-file ./packaged.yaml",

@@ -16,6 +16,8 @@ Globals:
         DB_USER: !Ref dbUser
         DB_PASSWORD: !Ref dbPassword
         BUCKET_NAME: !Ref MessagesBucket
+        SLACK_WORKSPACE: !Ref slackWorkspace
+        SLACK_TOKEN: !Ref slackToken
     Timeout: 30
     
 Parameters:
@@ -29,7 +31,11 @@ Parameters:
     Type: String
   dbPassword:
     Type: String
-  
+  slackToken:
+    Type: String
+  slackWorkspace:
+    Type: String
+
 Resources:
   ProcessMessage:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction

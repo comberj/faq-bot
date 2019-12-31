@@ -1,6 +1,7 @@
 const aws = require('aws-sdk')
 const comprehend = new aws.Comprehend();
-// const s3 = new aws.S3({ apiVersion: '2006-03-01' });
+const { WebClient } = require('@slack/web-api');
+const slack = new WebClient(process.env.SLACK_TOKEN);
 
 // Require and initialize outside of your main handler
 const mysql = require('serverless-mysql')({
@@ -73,6 +74,9 @@ exports.lambdaHandler = async (event, context) => {
                 `;
                 let keywordResults = await mysql.query(result_query);
                 console.log('Search Results:', keywordResults);
+                
+                const slackResponse = await slack.chat.postMessage({ channel: body.event.channel, thread_ts: body.event.event_ts, text: 'Response to your question!' });
+                console.log('Slack Response:', slackResponse);
                 
                 const insert_message_query = `
                     INSERT INTO messages (message_ts,channel,keyword)
