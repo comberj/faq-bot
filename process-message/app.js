@@ -39,53 +39,53 @@ exports.lambdaHandler = async (event, context) => {
         console.log('event.body', event.body);
         const body = JSON.parse(event.body);
         if(body.type === 'url_verification') {
-            console.log('url_verification');
             Object.assign(response, {
                 'statusCode': 200,
                 'body': JSON.stringify({ challenge: body.challenge })
             });
         } else if (body.type === 'event_callback'){
-            console.log('event_callback');
-            
-            var params = {
-              LanguageCode: 'en',
-              Text: body.event.text
-            };
-            const entities = await comprehend.detectEntities(params).promise();
-            const keyPhrases = await comprehend.detectKeyPhrases(params).promise();
-            
-            let keywords = entities.Entities.concat(keyPhrases.KeyPhrases).map(function(k) { return k.Text });
-            console.log('keywords: ', keywords);
-            
             // Store metaData in body
             body.metaData = {
-              type: typeof body.event.thread_ts !== 'undefined' ? 'answer' : 'question',
-              keywords: keywords
+              type: typeof body.event.thread_ts !== 'undefined' ? 'answer' : 'question'
             };
             
             if (body.metaData.type === 'question') {
                 await mysql.query('CREATE TABLE IF NOT EXISTS messages (id INT AUTO_INCREMENT PRIMARY KEY, message_ts VARCHAR(100), channel VARCHAR(50), keyword VARCHAR(255));')
-                const result_query = `
-                    SELECT COUNT(id) as hits, message_ts, channel
-                    FROM messages
-                    WHERE keyword IN (${keywords.map(function (k) { return "'" + k.replace("'", "''") + "'"; }).join()})
-                    GROUP BY message_ts, channel
-                    ORDER BY hits DESC
-                `;
-                let keywordResults = await mysql.query(result_query);
-                console.log('Search Results:', keywordResults);
                 
-                const slackResponse = await slack.chat.postMessage({ channel: body.event.channel, thread_ts: body.event.event_ts, text: 'Response to your question!' });
-                console.log('Slack Response:', slackResponse);
-                
-                const insert_message_query = `
-                    INSERT INTO messages (message_ts,channel,keyword)
-                    VALUES ${keywords.map(function (k) { return `('${body.event.event_ts}','${body.event.channel}','${k.replace("'", "''")}')`}).join()};
-                `;
-                await mysql.query(insert_message_query);
+                const messageCheck = await mysql.query('SELECT COUNT(*) as messageCount FROM messages WHERE message_ts = ?', [body.event.event_ts]);
+                if (messageCheck[0].messageCount === 0) {
+                    var params = {
+                      LanguageCode: 'en',
+                      Text: body.event.text
+                    };
+                    const entities = await comprehend.detectEntities(params).promise();
+                    const keyPhrases = await comprehend.detectKeyPhrases(params).promise();
+
+                    let keywords = entities.Entities.concat(keyPhrases.KeyPhrases).map(function(k) { return k.Text });
+                    body.metaData.keywords = keywords;
+
+                    const result_query = `
+                        SELECT COUNT(id) as hits, message_ts, channel
+                        FROM messages
+                        WHERE keyword IN (${keywords.map(function (k) { return "'" + k.replace("'", "''") + "'"; }).join()})
+                        GROUP BY message_ts, channel
+                        ORDER BY hits DESC
+                    `;
+                    let keywordResults = await mysql.query(result_query);
+                    console.log('Search Results:', keywordResults);
+
+                     // TODO: To generate link to previous message, take the following: https://winedirectteam.slack.com/archives/${body.event.channel}/p${body.event.event_ts.replace('.','')}
+
+                    const slackResponse = await slack.chat.postMessage({ channel: body.event.channel, thread_ts: body.event.event_ts, text: 'Response to your question!' });
+                    console.log('Slack Response:', slackResponse);
+
+                    const insert_message_query = `
+                        INSERT INTO messages (message_ts,channel,keyword)
+                        VALUES ${keywords.map(function (k) { return `('${body.event.event_ts}','${body.event.channel}','${k.replace("'", "''")}')`}).join()};
+                    `;
+                    await mysql.query(insert_message_query);
+                }
             }
-            
-            // TODO: To generate link to previous message, take the following: https://winedirectteam.slack.com/archives/${body.event.channel}/p${body.event.event_ts.replace('.','')}
             
             Object.assign(response, {
                 'statusCode': 200,

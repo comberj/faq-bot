@@ -21,6 +21,10 @@ Globals:
           Ref: dbPassword
         BUCKET_NAME:
           Ref: MessagesBucket
+        SLACK_WORKSPACE:
+          Ref: slackWorkspace
+        SLACK_TOKEN:
+          Ref: slackToken
     Timeout: 30
 Parameters:
   region:
@@ -33,11 +37,15 @@ Parameters:
     Type: String
   dbPassword:
     Type: String
+  slackToken:
+    Type: String
+  slackWorkspace:
+    Type: String
 Resources:
   ProcessMessage:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami/b612e0ad22ba4150a8f703468d802837
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami/09a72608184a8ad22281446cedec45ee
       Handler: app.lambdaHandler
       Runtime: nodejs12.x
       Policies:
