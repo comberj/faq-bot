@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'sean-bot
+
+  Sample SAM Template for sean-bot
+
+  '
+Globals:
+  Function:
+    Environment:
+      Variables:
+        REGION:
+          Ref: region
+        DB_HOST:
+          Ref: dbHost
+        DB_NAME:
+          Ref: dbName
+        DB_USER:
+          Ref: dbUser
+        DB_PASSWORD:
+          Ref: dbPassword
+        BUCKET_NAME:
+          Ref: MessagesBucket
+    Timeout: 30
+Parameters:
+  region:
+    Type: String
+  dbHost:
+    Type: String
+  dbName:
+    Type: String
+  dbUser:
+    Type: String
+  dbPassword:
+    Type: String
+Resources:
+  ProcessMessage:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami/b612e0ad22ba4150a8f703468d802837
+      Handler: app.lambdaHandler
+      Runtime: nodejs12.x
+      Policies:
+      - S3CrudPolicy:
+          BucketName:
+            Ref: MessagesBucket
+      - ComprehendBasicAccessPolicy: {}
+      Events:
+        ProcessMessage:
+          Type: Api
+          Properties:
+            Path: /process
+            Method: post
+  MessagesBucket:
+    Type: AWS::S3::Bucket
+Outputs:
+  ProcessMessageApi:
+    Description: API Gateway endpoint URL for Prod stage for Process Message function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/process/
+  ProcessMessage:
+    Description: Process Message Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - ProcessMessage
+      - Arn
+  ProcessMessageIamRole:
+    Description: Implicit IAM Role created for Process Message function
+    Value:
+      Fn::GetAtt:
+      - ProcessMessageRole
+      - Arn

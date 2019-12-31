@@ -29,6 +29,7 @@ let response;
 
 exports.lambdaHandler = async (event, context) => {
     context.callbackWaitsForEmptyEventLoop = false;
+    
     try {
         response = {
             'isBase64Encoded': false,
@@ -53,15 +54,7 @@ exports.lambdaHandler = async (event, context) => {
             const keyPhrases = await comprehend.detectKeyPhrases(params).promise();
             
             let keywords = entities.Entities.concat(keyPhrases.KeyPhrases).map(function(k) { return k.Text });
-            
             console.log('keywords: ', keywords);
-            
-            /*
-                SELECT metaData.keywords, event.channel, event.event_ts
-                FROM bucket
-                WHERE 'the heck' IN (entities)
-                    OR keyword2 IN (entities)
-            */
             
             // Store metaData in body
             body.metaData = {
@@ -70,50 +63,30 @@ exports.lambdaHandler = async (event, context) => {
             };
             
             if (body.metaData.type === 'question') {
-                // CREATE TABLE IF NOT EXISTS messages (id INT AUTO_INCREMENT PRIMARY KEY, message_ts VARCHAR(100), channel VARCHAR(50), keyword VARCHAR(255));
                 await mysql.query('CREATE TABLE IF NOT EXISTS messages (id INT AUTO_INCREMENT PRIMARY KEY, message_ts VARCHAR(100), channel VARCHAR(50), keyword VARCHAR(255));')
                 const result_query = `
-                    SELECT COUNT(id), message_ts, channel
+                    SELECT COUNT(id) as hits, message_ts, channel
                     FROM messages
-                    WHERE keyword IN (${keywords.map(function (a) { return "'" + a.replace("'", "''") + "'"; }).join()})
-                `
-                let results = await mysql.query(result_query)
-                console.log(results);
-                // Search for like-questions
-                // const expression = 'SELECT metaData.keywords, event.channel, event.event_ts FROM S3Object WHERE 1 = 1';
-                // const params = {
-                //     Bucket: process.env.BUCKET_NAME,
-                //     Key: body.event.channel,
-                //     ExpressionType: 'SQL',
-                //     Expression: expression,
-                //     InputSerialization: {
-                //         JSON: {
-                //             Type: 'DOCUMENT'
-                //         }
-                //     },
-                //     OutputSerialization: {
-                //         JSON: {}
-                //     }
-                // };
+                    WHERE keyword IN (${keywords.map(function (k) { return "'" + k.replace("'", "''") + "'"; }).join()})
+                    GROUP BY message_ts, channel
+                    ORDER BY hits DESC
+                `;
+                let keywordResults = await mysql.query(result_query);
+                console.log('Search Results:', keywordResults);
                 
-                // let queryResults = await s3.selectObjectContent(params).promise();
-                // console.log('queryResults:', queryResults);
+                const insert_message_query = `
+                    INSERT INTO messages (message_ts,channel,keyword)
+                    VALUES ${keywords.map(function (k) { return `('${body.event.event_ts}','${body.event.channel}','${k.replace("'", "''")}')`}).join()};
+                `;
+                await mysql.query(insert_message_query);
             }
             
             // TODO: To generate link to previous message, take the following: https://winedirectteam.slack.com/archives/${body.event.channel}/p${body.event.event_ts.replace('.','')}
-            // var params = {
-            //     Body: JSON.stringify(body), 
-            //     Bucket: process.env.BUCKET_NAME, 
-            //     Key: `${body.event.channel}/p${body.event.event_ts.replace('.','')}.json`
-            // };
-            // console.log('params', params);
-            // const s3Response = await s3.putObject(params).promise();
-            // console.log('s3 response: ', s3Response);
             
-            // Object.assign(response, {
-            //     'statusCode': 200,
-            //     'body': JSON.stringify(body)
-            // });
+            Object.assign(response, {
+                'statusCode': 200,
+                'body': JSON.stringify(body)
+            });
         };
     } catch (err) {
         console.log(err);
