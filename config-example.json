@@ -5,5 +5,5 @@
 	"dbName": "db-name",
 	"dbUser": "db-user",
 	"dbPassword": "db-password",
-	"slackToken": "slackToken"
+	"slackToken": "your-bots-slackToken"
 }
