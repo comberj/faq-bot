@@ -92,6 +92,8 @@ exports.lambdaHandler = async (event, context) => {
         console.log(err);
         return err;
     }
+    
+    await mysql.end()
 
     console.log(response);
     return response;
