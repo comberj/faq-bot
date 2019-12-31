@@ -25,6 +25,8 @@ Globals:
           Ref: slackWorkspace
         SLACK_TOKEN:
           Ref: slackToken
+        SLACK_BOT_USER_ID:
+          Ref: slackBotUserID
     Timeout: 30
 Parameters:
   region:
@@ -41,11 +43,13 @@ Parameters:
     Type: String
   slackWorkspace:
     Type: String
+  slackBotUserID:
+    Type: String
 Resources:
   ProcessMessage:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami/fd646c27f3ba40fd47f85cdeaee88d80
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami/df08cfc9d93287c01536463352add854
       Handler: app.lambdaHandler
       Runtime: nodejs12.x
       Policies:

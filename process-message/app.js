@@ -46,13 +46,15 @@ exports.lambdaHandler = async (event, context) => {
         } else if (body.type === 'event_callback'){
             // Store metaData in body
             body.metaData = {
-              type: typeof body.event.thread_ts !== 'undefined' ? 'answer' : 'question'
+              type: calculateEventType(body.event)
             };
             
             if (body.metaData.type === 'question') {
                 await mysql.query('CREATE TABLE IF NOT EXISTS messages (id INT AUTO_INCREMENT PRIMARY KEY, message_ts VARCHAR(100), channel VARCHAR(50), keyword VARCHAR(255));')
                 
-                const messageCheck = await mysql.query('SELECT COUNT(*) as messageCount FROM messages WHERE message_ts = ?', [body.event.event_ts]);
+                const channel = body.event.channel;
+                const message_ts = body.event.event_ts;
+                const messageCheck = await mysql.query('SELECT COUNT(*) as messageCount FROM messages WHERE message_ts = ?', [message_ts]);
                 if (messageCheck[0].messageCount === 0) {
                     var params = {
                       LanguageCode: 'en',
@@ -68,21 +70,22 @@ exports.lambdaHandler = async (event, context) => {
                         SELECT COUNT(id) as hits, message_ts, channel
                         FROM messages
                         WHERE keyword IN (${keywords.map(function (k) { return "'" + k.replace("'", "''") + "'"; }).join()})
+                            AND channel = ?
                         GROUP BY message_ts, channel
                         ORDER BY hits DESC
                     `;
-                    let keywordResults = await mysql.query(result_query);
+                    let keywordResults = await mysql.query(result_query, [channel]);
                     console.log('Search Results:', keywordResults);
 
                     if (keywordResults.length > 0) {
                         const answerMessage = `I found some similar questions from this channel, these might help: ${generateSlackLinks(keywordResults)}`;
-                        const slackResponse = await slack.chat.postMessage({ channel: body.event.channel, thread_ts: body.event.event_ts, text: answerMessage });
+                        const slackResponse = await slack.chat.postMessage({ channel: channel, thread_ts: message_ts, text: answerMessage });
                         console.log('Slack Response:', slackResponse);
                     }
 
                     const insert_message_query = `
                         INSERT INTO messages (message_ts,channel,keyword)
-                        VALUES ${keywords.map(function (k) { return `('${body.event.event_ts}','${body.event.channel}','${k.replace("'", "''")}')`}).join()};
+                        VALUES ${keywords.map(function (k) { return `('${message_ts}','${channel}','${k.replace("'", "''")}')`}).join()};
                     `;
                     await mysql.query(insert_message_query);
                 }
@@ -103,6 +106,14 @@ exports.lambdaHandler = async (event, context) => {
     console.log(response);
     return response;
 };
+
+function calculateEventType(event) {
+    if (event.subtype && event.subtype === 'channel_join' && event.user === process.env.SLACK_BOT_USER_ID) {
+        return 'bot_joined';
+    } else {
+        return typeof event.thread_ts !== 'undefined' ? 'answer' : 'question'
+    }
+}
 
 function generateSlackLinks(results) {
     return results.map(function(r) {

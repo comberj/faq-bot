@@ -18,6 +18,7 @@ Globals:
         BUCKET_NAME: !Ref MessagesBucket
         SLACK_WORKSPACE: !Ref slackWorkspace
         SLACK_TOKEN: !Ref slackToken
+        SLACK_BOT_USER_ID: !Ref slackBotUserID
     Timeout: 30
     
 Parameters:
@@ -34,6 +35,8 @@ Parameters:
   slackToken:
     Type: String
   slackWorkspace:
+    Type: String
+  slackBotUserID:
     Type: String
 
 Resources:
