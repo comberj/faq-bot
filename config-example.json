@@ -1,9 +1,9 @@
 {
 	"region": "aws-region",
 	"dbHost": "db-host",
-	"dbPort": 0,
 	"dbName": "db-name",
 	"dbUser": "db-user",
 	"dbPassword": "db-password",
-	"slackToken": "your-bots-slackToken"
+	"slackToken": "your-bots-slackToken",
+	"slackWorkspace": "your-slack-workspace"
 }
