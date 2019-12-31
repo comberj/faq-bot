@@ -74,10 +74,11 @@ exports.lambdaHandler = async (event, context) => {
                     let keywordResults = await mysql.query(result_query);
                     console.log('Search Results:', keywordResults);
 
-                     // TODO: To generate link to previous message, take the following: https://winedirectteam.slack.com/archives/${body.event.channel}/p${body.event.event_ts.replace('.','')}
-
-                    const slackResponse = await slack.chat.postMessage({ channel: body.event.channel, thread_ts: body.event.event_ts, text: 'Response to your question!' });
-                    console.log('Slack Response:', slackResponse);
+                    if (keywordResults.length > 0) {
+                        const answerMessage = `I found some similar questions from this channel, these might help: ${generateSlackLinks(keywordResults)}`;
+                        const slackResponse = await slack.chat.postMessage({ channel: body.event.channel, thread_ts: body.event.event_ts, text: answerMessage });
+                        console.log('Slack Response:', slackResponse);
+                    }
 
                     const insert_message_query = `
                         INSERT INTO messages (message_ts,channel,keyword)
@@ -102,3 +103,9 @@ exports.lambdaHandler = async (event, context) => {
     console.log(response);
     return response;
 };
+
+function generateSlackLinks(results) {
+    return results.map(function(r) {
+        return `\nhttps://winedirectteam.slack.com/archives/${r.channel}/p${r.message_ts.replace('.','')}`
+    }).join('');
+}
