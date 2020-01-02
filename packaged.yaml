@@ -49,7 +49,7 @@ Resources:
   ProcessMessage:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami/df08cfc9d93287c01536463352add854
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami/136e1a74a9a6af1e78200f055add1ce9
       Handler: app.lambdaHandler
       Runtime: nodejs12.x
       Policies:

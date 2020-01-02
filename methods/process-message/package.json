@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"description": "Process Incoming Slack webhooks",
 	"main": "app.js",
-	"repository": "https://github.com/comberj/faq-bot/tree/master/process-message",
+	"repository": "https://github.com/comberj/faq-bot/tree/master/methods/process-message",
 	"author": "SAM CLI",
 	"license": "MIT",
 	"dependencies": {
