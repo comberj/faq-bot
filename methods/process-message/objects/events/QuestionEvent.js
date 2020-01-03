@@ -22,7 +22,7 @@ const QuestionEvent = function(body, context) {
 }
 
 QuestionEvent.prototype.process = async function(){
-	await mysql.query('CREATE TABLE IF NOT EXISTS messages (id INT AUTO_INCREMENT PRIMARY KEY, message_ts VARCHAR(100), channel VARCHAR(50), keyword VARCHAR(255));')
+	await mysql.query('CREATE TABLE IF NOT EXISTS messages (id INT AUTO_INCREMENT PRIMARY KEY, message_ts VARCHAR(100), channel VARCHAR(50), keyword VARCHAR(255));');
 
 	const channel = this.body.event.channel;
 	const message_ts = this.body.event.event_ts;

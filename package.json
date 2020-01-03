@@ -11,5 +11,6 @@
 		"package": "sam package --template-file ./template.yaml --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami --output-template-file ./packaged.yaml",
 		"deploy": "sam deploy --template-file ./packaged.yaml --stack-name sean-bot --capabilities CAPABILITY_IAM --parameter-overrides \"$(jq -r -j 'to_entries[] | \"ParameterKey=\\(.key),ParameterValue=\\(.value) \"' config.json)\"",
 		"build": "npm run package && npm run deploy"
-	}
+	},
+	"dependencies": {}
 }

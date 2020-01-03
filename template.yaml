@@ -8,6 +8,8 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
+    Handler: app.lambdaHandler
+    Runtime: nodejs12.x
     Environment:
       Variables:
         REGION: !Ref region
@@ -15,7 +17,7 @@ Globals:
         DB_NAME: !Ref dbName
         DB_USER: !Ref dbUser
         DB_PASSWORD: !Ref dbPassword
-        BUCKET_NAME: !Ref MessagesBucket
+        HISTORY_QUEUE_URL: !Ref HistoryQueue
         SLACK_WORKSPACE: !Ref slackWorkspace
         SLACK_TOKEN: !Ref slackToken
         SLACK_BOT_USER_ID: !Ref slackBotUserID
@@ -44,20 +46,30 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: methods/process-message/
-      Handler: app.lambdaHandler
-      Runtime: nodejs12.x
       Policies:
-        - S3CrudPolicy:
-            BucketName: !Ref MessagesBucket
         - ComprehendBasicAccessPolicy: {}
+        - SQSSendMessagePolicy: 
+            QueueName: !GetAtt HistoryQueue.QueueName
       Events:
         ProcessMessage:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /process
             Method: post
-  MessagesBucket:
-    Type: 'AWS::S3::Bucket'
+  ProcessHistory:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: methods/process-history/
+      Policies:
+        - ComprehendBasicAccessPolicy: {}
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt HistoryQueue.Arn
+            BatchSize: 10
+  HistoryQueue:
+    Type: AWS::SQS::Queue
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

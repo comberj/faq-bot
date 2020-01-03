@@ -7,6 +7,8 @@ Description: 'sean-bot
   '
 Globals:
   Function:
+    Handler: app.lambdaHandler
+    Runtime: nodejs12.x
     Environment:
       Variables:
         REGION:
@@ -19,8 +21,8 @@ Globals:
           Ref: dbUser
         DB_PASSWORD:
           Ref: dbPassword
-        BUCKET_NAME:
-          Ref: MessagesBucket
+        HISTORY_QUEUE_URL:
+          Ref: HistoryQueue
         SLACK_WORKSPACE:
           Ref: slackWorkspace
         SLACK_TOKEN:
@@ -49,22 +51,37 @@ Resources:
   ProcessMessage:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami/136e1a74a9a6af1e78200f055add1ce9
-      Handler: app.lambdaHandler
-      Runtime: nodejs12.x
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami/eda4c652aa34b19732cbb3adb53c5094
       Policies:
-      - S3CrudPolicy:
-          BucketName:
-            Ref: MessagesBucket
       - ComprehendBasicAccessPolicy: {}
+      - SQSSendMessagePolicy:
+          QueueName:
+            Fn::GetAtt:
+            - HistoryQueue
+            - QueueName
       Events:
         ProcessMessage:
           Type: Api
           Properties:
             Path: /process
             Method: post
-  MessagesBucket:
-    Type: AWS::S3::Bucket
+  ProcessHistory:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-yqsowj27uami/e39b81cc98f0c90df22746a91b94cf98
+      Policies:
+      - ComprehendBasicAccessPolicy: {}
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::GetAtt:
+              - HistoryQueue
+              - Arn
+            BatchSize: 10
+  HistoryQueue:
+    Type: AWS::SQS::Queue
 Outputs:
   ProcessMessageApi:
     Description: API Gateway endpoint URL for Prod stage for Process Message function
