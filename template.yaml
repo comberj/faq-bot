@@ -21,6 +21,7 @@ Globals:
         SLACK_WORKSPACE: !Ref slackWorkspace
         SLACK_TOKEN: !Ref slackToken
         SLACK_BOT_USER_ID: !Ref slackBotUserID
+        SLACK_INTRO_MESSAGE: !Ref slackIntroMessage
     Timeout: 30
     
 Parameters:
@@ -39,6 +40,8 @@ Parameters:
   slackWorkspace:
     Type: String
   slackBotUserID:
+    Type: String
+  slackIntroMessage:
     Type: String
 
 Resources:

@@ -1,6 +1,8 @@
 const axios = require('axios');
 var AWS = require('aws-sdk');
 var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
+const { WebClient } = require('@slack/web-api');
+const slack = new WebClient(process.env.SLACK_TOKEN);
 
 const BotJoinedEvent = function(body, context) {
 	this.body = body;
@@ -22,8 +24,8 @@ BotJoinedEvent.prototype.process = async function(){
 	const queueUrl = process.env.HISTORY_QUEUE_URL;
 	console.info('Slack History Results:', messages);
 	
-	console.log('all messages', messages);
-	let count = 0;
+	// Introduce self to channel
+	await sendSlackIntroMessage(channel);
 	
 	// Start sending historical messages to SQS for processing
 	let count = 0;
@@ -112,6 +114,25 @@ function uuidv4() {
 		var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
 		return v.toString(16);
 	});
+}
+
+async function sendSlackIntroMessage(channel) {
+	const defaultMessage = `Hello! I'm a FAQ Bot, here to help assist with questions that may already have an answer from this channel's history!`
+		+ `\nAs you're reading this, I'm analyzing this channel's history and trying to determine keywords I can use to suggest related questions in the future.`
+		+ `\nFrom now on, if you ask questions, try to do so on the top level of this channel. All replies from humans and myself should be in a thread on the related question.`;
+
+	const blocks = [
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": process.env.SLACK_INTRO_MESSAGE !== 'slackIntroMessage' ? decodeURI(process.env.SLACK_INTRO_MESSAGE) : defaultMessage
+			}
+		}
+	];
+	
+	const response = await slack.chat.postMessage({ channel: channel, blocks: blocks });
+	console.log('Slack Intro Response:', response);
 }
 
 module.exports = BotJoinedEvent;

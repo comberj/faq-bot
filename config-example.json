@@ -6,5 +6,6 @@
 	"dbPassword": "db-password",
 	"slackToken": "your-bots-slackToken",
 	"slackWorkspace": "your-slack-workspace",
-	"slackBotUserID": "US*****"
+	"slackBotUserID": "US*****",
+	"slackIntroMessage": "URI Encoded custom message (leave blank for default)"
 }
