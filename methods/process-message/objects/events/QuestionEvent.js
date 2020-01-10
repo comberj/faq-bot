@@ -40,14 +40,14 @@ QuestionEvent.prototype.process = async function(){
 
 		// Finds at most 3 related questions that have at least 2 matching keywords
 		const result_query = `
-				SELECT COUNT(id) as hits, message_ts, channel
-				FROM messages
-				WHERE keyword IN (${keywords.map(function (k) { return "'" + k.replace("'", "''") + "'"; }).join()})
-					AND channel = ?
-				GROUP BY message_ts, channel
-				HAVING hits > 1
-				ORDER BY hits DESC
-				LIMIT 3
+			SELECT COUNT(id) as hits, message_ts, channel
+			FROM messages
+			WHERE keyword IN (${keywords.map(function (k) { return "'" + k.replace("'", "''") + "'"; }).join()})
+				AND channel = ?
+			GROUP BY message_ts, channel
+			HAVING hits > 1
+			ORDER BY hits DESC
+			LIMIT 3
 		`;
 		let keywordResults = await mysql.query(result_query, [channel]);
 		console.log('Search Results:', keywordResults);
