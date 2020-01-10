@@ -12,10 +12,9 @@ const BotJoinedEvent = function(body, context) {
 }
 
 BotJoinedEvent.prototype.process = async function(){
-	// var getChannelHistory = function(family, value, callback) {
 	const channel = this.body.event.channel;
-	const url = `https://${process.env.SLACK_WORKSPACE}.slack.com/api/channels.history?token=${process.env.SLACK_TOKEN}&channel=${channel}`;
-	const response = await axios.get(url);
+	const slackHistoryURL = `https://${process.env.SLACK_WORKSPACE}.slack.com/api/channels.history?token=${process.env.SLACK_TOKEN}&channel=${channel}`;
+	const response = await axios.get(slackHistoryURL);
 	const messages = response.data.messages;
 	const queueUrl = process.env.HISTORY_QUEUE_URL;
 	
