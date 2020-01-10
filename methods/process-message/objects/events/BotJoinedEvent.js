@@ -13,14 +13,20 @@ const BotJoinedEvent = function(body, context) {
 
 BotJoinedEvent.prototype.process = async function(){
 	const channel = this.body.event.channel;
-	const slackHistoryURL = `https://${process.env.SLACK_WORKSPACE}.slack.com/api/channels.history?token=${process.env.SLACK_TOKEN}&channel=${channel}`;
+	
+	// Retrieve channel history
+	// TODO: Switch to conversations.history endpoint as this is deprecated
+	const slackHistoryURL = `https://${process.env.SLACK_WORKSPACE}.slack.com/api/channels.history?token=${process.env.SLACK_TOKEN}&channel=${channel}&count=1000`;
 	const response = await axios.get(slackHistoryURL);
 	const messages = response.data.messages;
 	const queueUrl = process.env.HISTORY_QUEUE_URL;
+	console.info('Slack History Results:', messages);
 	
 	console.log('all messages', messages);
 	let count = 0;
 	
+	// Start sending historical messages to SQS for processing
+	let count = 0;
 	const params = {
 		Entries: [],
 		QueueUrl: queueUrl
